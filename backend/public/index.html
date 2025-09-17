@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Live Sensor Monitor</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f7fa;
+      color: #333;
+      margin: 0;
+      padding: 20px;
+    }
+
+    h1 {
+      text-align: center;
+      color: #1f2937;
+      margin-bottom: 20px;
+    }
+
+    .current-reading {
+      background: #1e40af;
+      color: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      text-align: center;
+      font-size: 1.5rem;
+      margin-bottom: 30px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+
+    .current-reading span {
+      font-weight: bold;
+    }
+
+    ul#data {
+      list-style: none;
+      padding: 0;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    ul#data li {
+      background: #fff;
+      margin-bottom: 10px;
+      padding: 15px 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      display: flex;
+      justify-content: space-between;
+      font-size: 1rem;
+    }
+
+    ul#data li.latest {
+      border-left: 5px solid #1e40af;
+      background: #e0e7ff;
+    }
+  </style>
+</head>
+<body>
+  <h1>Live Sensor Monitor</h1>
+
+  <div class="current-reading" id="current">
+    Loading current data...
+  </div>
+
+  <ul id="data"></ul>
+
+  <script>
+    // Mock data for testing (remove this when API works)
+    let mockData = [
+      { temperature: 26.5, tds: 320, timestamp: new Date().toISOString() },
+      { temperature: 27.0, tds: 330, timestamp: new Date().toISOString() },
+    ];
+
+    async function fetchData() {
+      try {
+        // Uncomment below for real API
+        // const res = await fetch("http://10.138.129.78:3000/api/sensor");
+        // const data = await res.json();
+
+        // For demo, use mockData
+        const data = mockData;
+
+        if (!Array.isArray(data) || data.length === 0) return;
+
+        const latest = data[data.length - 1];
+
+        // Update current reading
+        const currentDiv = document.getElementById("current");
+        currentDiv.innerHTML = `
+          Current Temperature: <span>${latest.temperature} °C</span> |
+          TDS: <span>${latest.tds}</span> ppm
+        `;
+
+        // Update readings list
+        const list = document.getElementById("data");
+        list.innerHTML = "";
+
+        data.slice().reverse().forEach((entry, index) => {
+          const li = document.createElement("li");
+          li.className = index === 0 ? "latest" : "";
+          li.textContent = `${new Date(entry.timestamp).toLocaleTimeString()} → Temperature: ${entry.temperature} °C, TDS: ${entry.tds}`;
+          list.appendChild(li);
+        });
+
+        // For demo: generate new mock data every fetch
+        const newTemp = (25 + Math.random() * 5).toFixed(1);
+        const newTds = (300 + Math.random() * 50).toFixed(0);
+        mockData.push({ temperature: parseFloat(newTemp), tds: parseFloat(newTds), timestamp: new Date().toISOString() });
+        if (mockData.length > 20) mockData.shift(); // keep last 20 readings
+
+      } catch (err) {
+        console.error("Error fetching data:", err);
+        document.getElementById("current").textContent = "Error loading data!";
+      }
+    }
+
+    fetchData();
+    setInterval(fetchData, 5000);
+  </script>
+</body>
+</html>
